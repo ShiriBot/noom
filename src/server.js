@@ -1,7 +1,9 @@
 /* http import */
 import http from "http";
 /* websocket import */
-import WebSocket from "ws";
+/* import WebSocket from "ws"; */
+/* socket.io import */
+import SocketIO from "socket.io";
 /* express import */
 import express from "express";
 
@@ -26,34 +28,41 @@ const handleListen = () => console.log('Listening on http://localhost:3000');
 /* 꼭 이렇게 해야하는 건 아니지만! 동시에 같은 포트를 사용하기 위해 */
 /* websocket과 http를 동시에 사용하기 위해서 서버 생성. */ 
 /*requestListener 경로로 express에서 생성한 application */
-const server = http.createServer(app);
-/* http 서버 위에 ws server 생성 */
-const wss = new WebSocket.Server({server});
+const httpServer = http.createServer(app);
+/* socket.io 서버 */
+const wsServer = SocketIO(httpServer);
 
-/* fake database */
-/* socket에 연결되었을 때 개별 socket을 인식하는 목록 */
+wsServer.on("connection", socket =>{
+    console.log(socket);
+});
+
+/* 
+Websocket 이용한 방법
+--http 서버 위에 ws server 생성
+const wss = new WebSocket.Server({server});
+--fake database
+--socket에 연결되었을 때 개별 socket을 인식하는 목록
 const sockets=[];
 
-
-/* WebSocket connection event Listener */
-/* callback : socket */
+--WebSocket connection event Listener
+--callback : socket
 wss.on("connection",(socket)=>{
-    /* socket에 연결되었을 때 개별 socket을 sockets에 추가*/
+    --socket에 연결되었을 때 개별 socket을 sockets에 추가
     sockets.push(socket);
     socket["nickname"] = "Anon";
     console.log("Connected to Browser ✅"); 
     
-    /* WebSocket disconnection event Listener */
-    /* connect한 창을 꺼버렸을때 */
+    --WebSocket disconnection event Listener
+    --connect한 창을 꺼버렸을때
     socket.on("close",()=>console.log("Disconnected from the Browser"))
     
-    /* WebSocket message event Listener */
+    --WebSocket message event Listener
     socket.on("message", msg => {
-        /* Stirng을 javascript object로 parse */
+        --Stirng을 javascript object로 parse
         const message = JSON.parse(msg);
         switch(message.type){
             case "new_message":
-                /* WebSocket send message from server to browser */
+                --WebSocket send message from server to browser
                 sockets.forEach((aSocket)=>
                     aSocket.send(`${socket.nickname} : ${message.payload}`)
                 );
@@ -61,6 +70,6 @@ wss.on("connection",(socket)=>{
                 socket["nickname"] = message.payload;
         }        
     });
-});
+}); */
 
-server.listen(3000,handleListen);
+httpServer.listen(3000,handleListen);
