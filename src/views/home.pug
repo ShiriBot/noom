@@ -11,9 +11,11 @@ html(lang="en")
             h1 Noom!
         main
             div#myStream
+                // playsinline 모바일 브라우저에서 비디오를 전체화면이 되지 않게 하는 속성
                 video#myFace(autoplay,playsinline, width="400",height="400")
                 button#mute Mute
                 button#camera Turn Camera Off
+                // 입력 비디오를 선택할 수 있는 select
                 select#cameras
                     option(value="devide") Face Camera
         script(src="/socket.io/socket.io.js") 
