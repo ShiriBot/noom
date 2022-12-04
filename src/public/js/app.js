@@ -24,15 +24,26 @@ async function getCameras() {
     try { 
         /* enumerateDevices() : 컴퓨터에 연결되어 있는 모든 장치의 목록 */
         const devices = await navigator.mediaDevices.enumerateDevices();
+        console.log(devices);
         /* 비디오 입력장치(카메라)만 필터링 */
-        const cameras = devices.filter( device => device.kind === "videoinput");
-        const currentCamera = myStream.getVideoTracks();
+        /* const cameras = devices.filter( device => device.kind === "videoinput"); */
+        const mics = devices.filter( device => device.kind === "audioinput");
+        const currentMic = myStream.getAudioTracks();
         /* 불러온 카메라를 화면 option에 삽입하기*/
-        cameras.forEach(camera=>{
+        /* cameras.forEach(camera=>{
             const option = document.createElement("option");
             option.value = camera.deviceId;
             option.innerText=camera.label;
             if(currentCamera.label == camera.label){
+                option.selected = true;
+            }
+        }) */
+        mics.forEach(mic=>{
+            const option = document.createElement("option");
+            option.value = mic.deviceId;
+            option.innerText=mic.label;
+            camerasSelect.appendChild(option);
+            if(currentMic.label == mic.label){
                 option.selected = true;
             }
         })
@@ -90,6 +101,16 @@ function handleCameraClick() {
 
 async function handleCameraChange(){
     await getMedia(camerasSelect.value);
+    if(myPeerConnection){
+        /* sender : peer로 보내진 media stream track control */
+        /*         const videoTrack = myStream.getVideoTracks()[0];
+        const videoSender = myPeerConnection.getSenders().find(sender=> sender.track.kind === "video");
+        videoSender.replaceTrack(videoTrack); */
+
+        const audioTrack = myStream.getVideoTracks()[0];
+        const audioSender = myPeerConnection.getSenders().find(sender=> sender.track.kind === "audio");
+        audioSender.replaceTrack(audioTrack);
+    }
 }
 
 /* 음소거 버튼 Event Listener */
