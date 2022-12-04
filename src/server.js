@@ -7,6 +7,7 @@ const { Server } = require("socket.io");
 const { instrument } = require("@socket.io/admin-ui");
 /* express import */
 import express from "express";
+import { SocketAddress } from "net";
 
 /* express applincation 구성 */
 const app = express();
@@ -48,6 +49,9 @@ wsServer.on("connection", socket => {
     });
     socket.on("answer", (answer, roomName)=>{
       socket.to(roomName).emit("answer", answer);
+    });
+    socket.on("ice", (ice, roomName)=>{
+      socket.to(roomName).emit("ice",ice);
     });
 });
 

@@ -129,27 +129,52 @@ welcomeForm.addEventListener("submit", handleWelcomSubmit);
 socket.on("welcome", async ()=>{
     const offer = await myPeerConnection.createOffer();
     myPeerConnection.setLocalDescription(offer);
-    /* conseole.log("sent the offer"); */
+    console.log("sent the offer");
     // send offer
     socket.emit("offer", offer, roomName);
 });
 
 socket.on("offer", async(offer) =>{
     // receive offer
+    console.log("received the offer");
     myPeerConnection.setRemoteDescription(offer);
     const answer = await myPeerConnection.createAnswer();
     myPeerConnection.setLocalDescription(answer);
     socket.emit("answer", answer, roomName);
+    console.log("sent the answer");
 });
 
 socket.on("answer", answer => {
+    console.log("received the answer");
     myPeerConnection.setRemoteDescription(answer);
+});
+
+socket.on("ice", ice =>{
+    /* 서버에서 candidate 수신 */
+    console.log("received candidate");
+    myPeerConnection.addIceCandidate(ice);
 });
 
 //RTC Code
 function makeConnection(){
     myPeerConnection = new RTCPeerConnection();
+    /* p2p 연결 완료 후 실행되는 IceCandidate event listener */
+    myPeerConnection.addEventListener("icecandidate", handleIce);
+    /* 연결 이후 stream 추가 event listener */
+    myPeerConnection.addEventListener("addstream", handleAddStream);
     myStream
         .getTracks()
         .forEach((track)=> myPeerConnection.addTrack(track,myStream));
+}
+
+function handleIce(data){
+    /* 서버로 candidate 송신 */
+    console.log("sent candidate");
+    socket.emit("ice", data.candidate, roomName);
+}
+
+function handleAddStream(data){
+    const peerStream = document.getElementById("peerStream");
+    console.log("got an stream from my peer:", data.stream);
+    peerStream.srcObject = data.stream;
 }
