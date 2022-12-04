@@ -38,90 +38,13 @@ const wsServer = new Server(httpServer, {
     }
   });
 
-instrument(wsServer, {
-    auth: false,
- });
-
-function publicRooms(){
-    const {
-        sockets: {
-            adapter: { sids, rooms },
-        }
-    } = wsServer;
-    const publicRooms = [];
-    rooms.forEach((_,key)=>{
-        if(sids.get(key)===undefined){
-            publicRooms.push(key);
-        }
-    });
-    return publicRooms;
-}
-
-function countRoom(roomName){
-    return wsServer.sockets.adapter.rooms.get(roomName)?.size;
-}
-
-wsServer.on("connection", (socket) => {
-    socket["nickname"]="Anon";
-    socket.onAny((event) => {
-        /* console.log(wsServer.sockets.adapter); */
-      console.log(`Socket Event: ${event}`);
-    });
-    socket.on("enter_room", (roomName,done) => {
+wsServer.on("connection", socket => {
+    socket.on("join_room", (roomName,done) =>{
         socket.join(roomName);
         done();
-        socket.to(roomName).emit("welcome",socket.nickname, countRoom(roomName));
-        wsServer.sockets.emit("room_change",publicRooms());
+        socket.to(roomName).emit("welcome"); 
     });
-    socket.on("disconnecting",()=>{
-        socket.rooms.forEach(room => {
-            socket.to(room).emit("bye",socket.nickname, countRoom(room)-1);
-        });
-    });
-    socket.on("disconnect",()=>{
-        wsServer.sockets.emit("room_change",publicRooms());
-    });
-    socket.on("new_message", (msg, room, done)=>{
-        socket.to(room).emit("new_message",`${socket.nickname} : ${msg}`);
-        done();
-    });
-    socket.on("nickname", (nickname) => (socket["nickname"]=nickname)); 
 });
 
-/* 
-Websocket 이용한 방법
---http 서버 위에 ws server 생성
-const wss = new WebSocket.Server({server});
---fake database
---socket에 연결되었을 때 개별 socket을 인식하는 목록
-const sockets=[];
-
---WebSocket connection event Listener
---callback : socket
-wss.on("connection",(socket)=>{
-    --socket에 연결되었을 때 개별 socket을 sockets에 추가
-    sockets.push(socket);
-    socket["nickname"] = "Anon";
-    console.log("Connected to Browser ✅"); 
-    
-    --WebSocket disconnection event Listener
-    --connect한 창을 꺼버렸을때
-    socket.on("close",()=>console.log("Disconnected from the Browser"))
-    
-    --WebSocket message event Listener
-    socket.on("message", msg => {
-        --Stirng을 javascript object로 parse
-        const message = JSON.parse(msg);
-        switch(message.type){
-            case "new_message":
-                --WebSocket send message from server to browser
-                sockets.forEach((aSocket)=>
-                    aSocket.send(`${socket.nickname} : ${message.payload}`)
-                );
-            case "nickname":
-                socket["nickname"] = message.payload;
-        }        
-    });
-}); */
 
 httpServer.listen(3000,handleListen);
